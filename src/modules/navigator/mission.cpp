@@ -174,6 +174,17 @@ Mission::on_activation()
 void
 Mission::on_active()
 {
+	if (_work_item_type == WORK_ITEM_TYPE_PRECISION_LAND) {
+		// switch out of precision land once landed
+		if (_navigator->get_land_detected()->landed) {
+			_navigator->get_precland()->on_inactivation();
+			_work_item_type = WORK_ITEM_TYPE_DEFAULT;
+
+		} else {
+			_navigator->get_precland()->on_active();
+		}
+	}
+
 	check_mission_valid(false);
 
 	/* check if anything has changed */
@@ -262,17 +273,6 @@ Mission::on_active()
 	    && (_navigator->abort_landing())) {
 
 		do_abort_landing();
-	}
-
-	if (_work_item_type == WORK_ITEM_TYPE_PRECISION_LAND) {
-		// switch out of precision land once landed
-		if (_navigator->get_land_detected()->landed) {
-			_navigator->get_precland()->on_inactivation();
-			_work_item_type = WORK_ITEM_TYPE_DEFAULT;
-
-		} else {
-			_navigator->get_precland()->on_active();
-		}
 	}
 }
 
@@ -1263,6 +1263,7 @@ Mission::heading_sp_update()
 
 			_mission_item.yaw = yaw;
 			pos_sp_triplet->current.yaw = _mission_item.yaw;
+			pos_sp_triplet->current.yaw_valid = true;
 		}
 
 		// we set yaw directly so we can run this in parallel to the FOH update
@@ -1566,6 +1567,7 @@ Mission::save_mission_state()
 		if (mission_state.dataman_id == _mission.dataman_id && mission_state.count == _mission.count) {
 			/* navigator may modify only sequence, write modified state only if it changed */
 			if (mission_state.current_seq != _current_mission_index) {
+				mission_state.current_seq = _current_mission_index;
 				mission_state.timestamp = hrt_absolute_time();
 
 				if (dm_write(DM_KEY_MISSION_STATE, 0, DM_PERSIST_POWER_ON_RESET, &mission_state,
