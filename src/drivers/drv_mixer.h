@@ -53,7 +53,7 @@
 #ifndef _DRV_MIXER_H
 #define _DRV_MIXER_H
 
-#include <px4_defines.h>
+#include <px4_platform_common/defines.h>
 #include <stdint.h>
 #include <sys/ioctl.h>
 
@@ -70,11 +70,6 @@
 
 /** reset (clear) the mixer configuration */
 #define MIXERIOCRESET		_MIXERIOC(1)
-
-/**
- * add a simple mixer in (struct mixer_simple_s *)arg
- */
-#define MIXERIOCADDSIMPLE	_MIXERIOC(2)
 
 /* _MIXERIOC(3) was deprecated */
 /* _MIXERIOC(4) was deprecated */
