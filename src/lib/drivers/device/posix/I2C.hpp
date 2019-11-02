@@ -42,7 +42,7 @@
 
 #include "../CDev.hpp"
 
-#include <px4_i2c.h>
+#include <px4_platform_common/i2c.h>
 
 #ifdef __PX4_LINUX
 #include <linux/i2c.h>
@@ -66,7 +66,7 @@ public:
 	I2C(I2C &&) = delete;
 	I2C &operator=(I2C &&) = delete;
 
-	virtual int	init();
+	virtual int	init() override;
 
 protected:
 	/**
@@ -106,7 +106,7 @@ protected:
 	 */
 	int		transfer(const uint8_t *send, const unsigned send_len, uint8_t *recv, const unsigned recv_len);
 
-	bool		external() { return px4_i2c_bus_external(_device_id.devid_s.bus); }
+	virtual bool	external() const override { return px4_i2c_bus_external(_device_id.devid_s.bus); }
 
 private:
 	int			_fd{-1};
