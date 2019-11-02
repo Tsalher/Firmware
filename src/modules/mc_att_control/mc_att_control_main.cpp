@@ -375,9 +375,113 @@ MulticopterAttitudeControl::control_attitude_rates(float dt, const Vector3f &rat
 		_rate_control.resetIntegral();
 	}
 
+<<<<<<< HEAD
+	// get the raw gyro data and correct for thermal errors
+	Vector3f rates;
+
+	if (_selected_gyro == 0) {
+		rates(0) = (_sensor_gyro.x - _sensor_correction.gyro_offset_0[0]) * _sensor_correction.gyro_scale_0[0];
+		rates(1) = (_sensor_gyro.y - _sensor_correction.gyro_offset_0[1]) * _sensor_correction.gyro_scale_0[1];
+		rates(2) = (_sensor_gyro.z - _sensor_correction.gyro_offset_0[2]) * _sensor_correction.gyro_scale_0[2];
+
+	} else if (_selected_gyro == 1) {
+		rates(0) = (_sensor_gyro.x - _sensor_correction.gyro_offset_1[0]) * _sensor_correction.gyro_scale_1[0];
+		rates(1) = (_sensor_gyro.y - _sensor_correction.gyro_offset_1[1]) * _sensor_correction.gyro_scale_1[1];
+		rates(2) = (_sensor_gyro.z - _sensor_correction.gyro_offset_1[2]) * _sensor_correction.gyro_scale_1[2];
+
+	} else if (_selected_gyro == 2) {
+		rates(0) = (_sensor_gyro.x - _sensor_correction.gyro_offset_2[0]) * _sensor_correction.gyro_scale_2[0];
+		rates(1) = (_sensor_gyro.y - _sensor_correction.gyro_offset_2[1]) * _sensor_correction.gyro_scale_2[1];
+		rates(2) = (_sensor_gyro.z - _sensor_correction.gyro_offset_2[2]) * _sensor_correction.gyro_scale_2[2];
+
+	} else {
+		rates(0) = _sensor_gyro.x;
+		rates(1) = _sensor_gyro.y;
+		rates(2) = _sensor_gyro.z;
+	}
+
+	// rotate corrected measurements from sensor to body frame
+	rates = _board_rotation * rates;
+
+	// correct for in-run bias errors
+	rates(0) -= _sensor_bias.gyro_x_bias;
+	rates(1) -= _sensor_bias.gyro_y_bias;
+	rates(2) -= _sensor_bias.gyro_z_bias;
+
+	Vector3f rates_p_scaled = _rate_p.emult(pid_attenuations(_param_mc_tpa_break_p.get(), _param_mc_tpa_rate_p.get()));
+	Vector3f rates_i_scaled = _rate_i.emult(pid_attenuations(_param_mc_tpa_break_i.get(), _param_mc_tpa_rate_i.get()));
+	Vector3f rates_d_scaled = _rate_d.emult(pid_attenuations(_param_mc_tpa_break_d.get(), _param_mc_tpa_rate_d.get()));
+
+	/* angular rates error */
+	Vector3f rates_err = _rates_sp - rates;
+
+	/* apply low-pass filtering to the rates for D-term */
+	Vector3f rates_filtered(_lp_filters_d.apply(rates));
+
+	_att_control = rates_p_scaled.emult(rates_err) +
+		       _rates_int -
+		       rates_d_scaled.emult(rates_filtered - _rates_prev_filtered) / dt +
+		       _rate_ff.emult(_rates_sp);
+
+	_rates_prev = rates;
+	_rates_prev_filtered = rates_filtered;
+
+	/* update integral only if we are not landed */
+	if (!_vehicle_land_detected.maybe_landed && !_vehicle_land_detected.landed) {
+		for (int i = AXIS_INDEX_ROLL; i < AXIS_COUNT; i++) {
+			// Check for positive control saturation
+			bool positive_saturation =
+				((i == AXIS_INDEX_ROLL) && _saturation_status.flags.roll_pos) ||
+				((i == AXIS_INDEX_PITCH) && _saturation_status.flags.pitch_pos) ||
+				((i == AXIS_INDEX_YAW) && _saturation_status.flags.yaw_pos);
+
+			// Check for negative control saturation
+			bool negative_saturation =
+				((i == AXIS_INDEX_ROLL) && _saturation_status.flags.roll_neg) ||
+				((i == AXIS_INDEX_PITCH) && _saturation_status.flags.pitch_neg) ||
+				((i == AXIS_INDEX_YAW) && _saturation_status.flags.yaw_neg);
+
+			// prevent further positive control saturation
+			if (positive_saturation) {
+				rates_err(i) = math::min(rates_err(i), 0.0f);
+
+			}
+
+			// prevent further negative control saturation
+			if (negative_saturation) {
+				rates_err(i) = math::max(rates_err(i), 0.0f);
+
+			}
+
+			// I term factor: reduce the I gain with increasing rate error.
+			// This counteracts a non-linear effect where the integral builds up quickly upon a large setpoint
+			// change (noticeable in a bounce-back effect after a flip).
+			// The formula leads to a gradual decrease w/o steps, while only affecting the cases where it should:
+			// with the parameter set to 400 degrees, up to 100 deg rate error, i_factor is almost 1 (having no effect),
+			// and up to 200 deg error leads to <25% reduction of I.
+			float i_factor = rates_err(i) / math::radians(400.f);
+			i_factor = math::max(0.0f, 1.f - i_factor * i_factor);
+
+			// Perform the integration using a first order method and do not propagate the result if out of range or invalid
+			float rate_i = _rates_int(i) + i_factor * rates_i_scaled(i) * rates_err(i) * dt;
+
+			if (PX4_ISFINITE(rate_i) && rate_i > -_rate_int_lim(i) && rate_i < _rate_int_lim(i)) {
+				_rates_int(i) = rate_i;
+
+			}
+		}
+	}
+
+	/* explicitly limit the integrator state */
+	for (int i = AXIS_INDEX_ROLL; i < AXIS_COUNT; i++) {
+		_rates_int(i) = math::constrain(_rates_int(i), -_rate_int_lim(i), _rate_int_lim(i));
+
+	}
+=======
 	const bool landed = _vehicle_land_detected.maybe_landed || _vehicle_land_detected.landed;
 	_rate_control.setSaturationStatus(_saturation_status);
 	_att_control = _rate_control.update(rates, _rates_sp, dt, landed);
+>>>>>>> d657a4ee834fb859319451b38e04525630a84e20
 }
 
 void
