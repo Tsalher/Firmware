@@ -132,24 +132,6 @@ PARAM_DEFINE_INT32(CBRK_FLIGHTTERM, 121212);
 PARAM_DEFINE_INT32(CBRK_ENGINEFAIL, 284953);
 
 /**
- * Circuit breaker for GPS failure detection
- *
- * Setting this parameter to 240024 will disable the GPS failure detection.
- * If this check is enabled, then the sensor check will fail if the GPS module
- * is missing. It will also check for excessive signal noise on the GPS receiver
- * and warn the user if detected.
- *
- * WARNING: ENABLING THIS CIRCUIT BREAKER IS AT OWN RISK
- *
- * @reboot_required true
- * @min 0
- * @max 240024
- * @category Developer
- * @group Circuit Breaker
- */
-PARAM_DEFINE_INT32(CBRK_GPSFAIL, 0);
-
-/**
  * Circuit breaker for disabling buzzer
  *
  * Setting this parameter to 782097 will disable the buzzer audio notification.
@@ -194,3 +176,18 @@ PARAM_DEFINE_INT32(CBRK_USB_CHK, 0);
  * @group Circuit Breaker
  */
 PARAM_DEFINE_INT32(CBRK_VELPOSERR, 0);
+
+/**
+ * Circuit breaker for arming in fixed-wing mode check
+ *
+ * Setting this parameter to 159753 will enable arming in fixed-wing
+ * mode for VTOLs.
+ * WARNING: ENABLING THIS CIRCUIT BREAKER IS AT OWN RISK
+ *
+ * @reboot_required true
+ * @min 0
+ * @max 159753
+ * @category Developer
+ * @group Circuit Breaker
+ */
+PARAM_DEFINE_INT32(CBRK_VTOLARMING, 0);
