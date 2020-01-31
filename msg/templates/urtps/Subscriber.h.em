@@ -12,7 +12,7 @@
 @###############################################
 @{
 import genmsg.msgs
-import gencpp
+
 from px_generate_uorb_topic_helper import * # this is in Tools/
 
 topic = alias if alias else spec.short_name
@@ -24,7 +24,7 @@ except AttributeError:
 /****************************************************************************
  *
  * Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
- * Copyright (C) 2018-2019 PX4 Development Team. All rights reserved.
+ * Copyright (c) 2018-2019 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -76,6 +76,7 @@ except AttributeError:
 
 #include <atomic>
 #include <condition_variable>
+#include <queue>
 
 using namespace eprosima::fastrtps;
 using namespace eprosima::fastrtps::rtps;
@@ -85,7 +86,7 @@ class @(topic)_Subscriber
 public:
     @(topic)_Subscriber();
     virtual ~@(topic)_Subscriber();
-    bool init(std::condition_variable* cv);
+    bool init(uint8_t topic_ID, std::condition_variable* t_send_queue_cv, std::mutex* t_send_queue_mutex, std::queue<uint8_t>* t_send_queue);
     void run();
     bool hasMsg();
 @[if 1.5 <= fastrtpsgen_version <= 1.7]@
@@ -101,6 +102,8 @@ public:
     @(topic) getMsg();
 @[    end if]@
 @[end if]@
+    void unlockMsg();
+
 private:
     Participant *mp_participant;
     Subscriber *mp_subscriber;
@@ -129,20 +132,25 @@ private:
 @[    end if]@
 @[end if]@
         std::atomic_bool has_msg;
-        std::condition_variable* cv_msg;
+        uint8_t topic_ID;
+        std::condition_variable* t_send_queue_cv;
+        std::mutex* t_send_queue_mutex;
+        std::queue<uint8_t>* t_send_queue;
+        std::condition_variable has_msg_cv;
+        std::mutex has_msg_mutex;
 
     } m_listener;
 @[if 1.5 <= fastrtpsgen_version <= 1.7]@
 @[    if ros2_distro]@
-    @(package)::msg::dds_::@(topic)_PubSubType myType;
+    @(package)::msg::dds_::@(topic)_PubSubType @(topic)DataType;
 @[    else]@
-    @(topic)_PubSubType myType;
+    @(topic)_PubSubType @(topic)DataType;
 @[    end if]@
 @[else]@
 @[    if ros2_distro]@
-    @(package)::msg::@(topic)PubSubType myType;
+    @(package)::msg::@(topic)PubSubType @(topic)DataType;
 @[    else]@
-    @(topic)PubSubType myType;
+    @(topic)PubSubType @(topic)DataType;
 @[    end if]@
 @[end if]@
 };
