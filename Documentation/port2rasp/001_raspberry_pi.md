@@ -1,11 +1,11 @@
-# PX4 in the Raspberry Pi 3
+#PX4 in the Raspberry Pi 3
 ## Compilation
 ### Necessary packages
 Format: package (package manager)
 - python-jinja2 (APT)
 - python-empy (APT)
 - python-pip (APT)
-- catkin_pkg (pip)
+- catkin\_pkg (pip)
 - pyyaml (pip)
 
 ### Fast configuration and compilation
@@ -26,3 +26,12 @@ Format: package (package manager)
 
 WARNING: do not install another DHCP server, such as isc-dhcp-server. The second daemon to start will fail. DHCP IP assignment may work, but there will be a service that fails to
 start due to conflict between two DHCP servers.
+
+## Running the software
+The *px4* executable requires a configuration file to run. If this file is not provided, the executable will look for the rcS configuration file in etc/. If this file is not found (which is common for regular Raspbian, the execution will fail. However, a configuration file can be specified with the `-s` option and the path to the configuration file. In the case of the Raspberry Pi 3, the execution command is the following:
+
+`./build/px4_raspberrypi_default/px4 -s ./posix-configs/rpi/<desired_config>.config`
+
+where `<desired_config>` is the use of the software. For example, in HITL configuration, the correct file is `px4\_hil.config`.
+
+The executable also enables a network interface for MAVLink communications, so a USB/UART connection should not be necessary.
