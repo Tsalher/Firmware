@@ -68,6 +68,7 @@ set(msg_files
 	gps_dump.msg
 	gps_inject_data.msg
 	home_position.msg
+	hover_thrust_estimate.msg
 	input_rc.msg
 	iridiumsbd_status.msg
 	irlock_report.msg
@@ -97,6 +98,7 @@ set(msg_files
 	power_button_state.msg
 	power_monitor.msg
 	pwm_input.msg
+	rpm.msg
 	qshell_req.msg
 	qshell_retval.msg
 	radio_status.msg
