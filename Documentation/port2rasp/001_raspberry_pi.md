@@ -35,3 +35,21 @@ The *px4* executable requires a configuration file to run. If this file is not p
 where `<desired_config>` is the use of the software. For example, in HITL configuration, the correct file is `px4\_hil.config`.
 
 The executable also enables a network interface for MAVLink communications, so a USB/UART connection should not be necessary.
+
+In order to debug directly in the Raspberry Pi, the debugger launch is similar to the run command:
+`gdb ./build/px4_raspberrypi_default/px4 -s posix_configs/rpi/px4_hil.config`
+
+If debugging remotely through an SSH connection, `gdbserver` will need to be installed in the Raspberry Pi, and the command to debug PX4 will be:
+
+- `gdbserver <Workstation IP address>:<Port> ./build/px4_raspberrypi_default/px4 -s ./posix-configs/rpi/<desired_config>.config` in the Raspberry Pi, and
+- `gdb`, then `target remote <Raspberry Pi IP address>:<Port>` within GDB's console.
+
+Eclipse allows setting up remote debugging. First, the software must be compiled for the remote machine, and the executable must be located in both the local and the remote machine.
+To debug remotely with Eclipse, add a new launch configuration for the Debug mode. A configuration window will pop up.
+
+In the *Main* tab, C/C++ application field, the local binary's path must be specified. On the lower part of the configuration window, it is possible to configure the connection
+to the Raspberry Pi. This connection can be serial, Arduino, Telnet or SSH. in this section, the absolute path to the remote executable must be specified.
+
+In the *arguments* tab, the program can be given arguments to run. In this case, as seen above, the arguments are `-s posix_configs/rpi/<desired_config>.config`.
+In the *debugger* tab, the important configuration happens in the *Gdbserver Settings* tab. This is where the port is chosen. *GDB* will be run automatically in the workstation with
+the port given to *gdbserver*.
